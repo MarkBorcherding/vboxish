@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -e
+
+fail_usage() {
+  cat <<- _EOF_
+
+Example Usage:
+  vboxish list
+  vboxish snapshot <name or pattern of vm> <name of snapshot>
+  vboxish restore <name or pattern of vm> <name of snapshot>
+
+_EOF_
+  exit 1
+}
+
+fail() {
+  echo $1
+  exit 1
+}
+
+restore(){
+  vm_pattern=$1
+  snapshot_name=$2
+
+  if [[ -z $vm_pattern || -z $snapshot_name ]]; then
+    fail "Usage: vboxish restore <name or pattern of vm> <name of snapshot>"
+  fi
+
+  vm_name=$(VBoxManage list vms | grep $1 | awk '{ print $1}' | sed 's/"//g');
+
+  echo " ==> Powering off $vm_name "
+  VBoxManage controlvm $vm_name poweroff 2>/dev/null || true
+
+  echo " ==> Restoring snapshot $snapshot_name"
+  VBoxManage snapshot $vm_name restore $2
+
+  echo " ==> Powering on $vm_name"
+  VBoxManage startvm $vm_name --type headless
+}
+
+list() {
+  VBoxManage list vms
+}
+
+snapshot(){
+  vm_pattern=$1
+  snapshot_name=$2
+
+  if [[ -z $vm_pattern || -z $snapshot_name ]]; then
+    fail "Usage: vboxish snapeshot <name or pattern of vm> <name of snapshot>"
+  fi
+
+  vm_name=$(VBoxManage list vms | grep $1 | awk '{ print $1}' | sed 's/"//g');
+  if [ -z "$vm_name" ]; then
+    fail "Error: Cannot find VM named $vm_pattern"
+  fi
+
+  echo " ==> Snapshotting $vm_name "
+  VBoxManage snapshot $vm_name take $snapshot_name
+  echo " ==> Created snapshot $snapshot_name"
+}
+
+case "$1" in
+  list)     shift
+            list $*
+            ;;
+  snapshot) shift
+            snapshot $*
+            ;;
+  restore)  shift
+            restore $*
+            ;;
+  *)        fail_usage
+            exit 1
+esac
