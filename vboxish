@@ -2,6 +2,10 @@
 
 set -e
 
+UNDERLINE="\033[4m"
+RESET_COLOR="\033[0m"
+RED="\033[0;31m"
+
 fail_usage() {
   cat <<- _EOF_
 
@@ -15,7 +19,7 @@ _EOF_
 }
 
 fail() {
-  echo $1
+  echo -e $1
   exit 1
 }
 
@@ -53,7 +57,7 @@ snapshot(){
 
   vm_name=$(VBoxManage list vms | grep $1 | awk '{ print $1}' | sed 's/"//g');
   if [ -z "$vm_name" ]; then
-    fail "Error: Cannot find VM named $vm_pattern"
+    fail "${RED}${UNDERLINE}Error${RESET_COLOR}: Cannot find VM named $vm_pattern"
   fi
 
   echo " ==> Snapshotting $vm_name "
