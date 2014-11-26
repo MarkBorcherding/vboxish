@@ -4,7 +4,7 @@ set -e
 
 UNDERLINE="\033[4m"
 RESET_COLOR="\033[0m"
-RED="\033[0;31m"
+RED="\033[31m"
 
 fail_usage() {
   cat <<- _EOF_
